@@ -1,27 +1,168 @@
-<!DOCTYPE html>
-<html lang="jp">
+<!doctype html>
+<html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <title>XBP_HPsample</title>
-    <link rel="stylesheet" href="./css/style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#17232b">
+  <meta name="description" content="デザイン演習とデジタルファブリケーションの世界を選んで進む、XBPの冒険ホームページ。">
+  <title>XBP QUEST | 冒険の入口</title>
+  <style>
+    :root {
+      --ink: #fff9df;
+      --gold: #ffd879;
+      --edge: #101820;
+      --panel: #202a37;
+      --panel-hi: #374657;
+      --mint: #b9edb0;
+    }
+    * { box-sizing: border-box; }
+    html { min-height: 100%; }
+    body {
+      margin: 0; min-height: 100vh; color: var(--ink); overflow-x: hidden;
+      background: #17232b;
+      font-family: "Yu Gothic", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+    }
+    a { color: inherit; }
+    .game { min-height: 100vh; position: relative; isolation: isolate; overflow: hidden; display: flex; flex-direction: column; }
+    /* Hand-built map tiles keep the page self-contained, like a little RPG field. */
+    .map {
+      position: absolute; z-index: -2; inset: 0 0 0; overflow: hidden;
+      background-color: #64b95b;
+      background-image:
+        radial-gradient(circle at 12px 14px, rgba(216,255,150,.65) 0 1px, transparent 1.7px),
+        radial-gradient(circle at 31px 35px, rgba(38,132,68,.42) 0 2px, transparent 2.7px),
+        linear-gradient(90deg, rgba(255,255,255,.035) 50%, transparent 50%),
+        linear-gradient(rgba(0,0,0,.035) 50%, transparent 50%);
+      background-size: 44px 44px, 52px 52px, 48px 48px, 48px 48px;
+    }
+    .map::before {
+      content: ""; position: absolute; left: -7%; top: 12%; width: 44%; height: 42%;
+      background-color: #277cd0;
+      background-image: radial-gradient(ellipse, #74c9ef 0 11%, transparent 13%), repeating-linear-gradient(0deg, transparent 0 18px, rgba(175,232,252,.4) 19px 21px, transparent 22px 38px);
+      border: 8px solid #1b683d; border-radius: 0 0 44% 0;
+      box-shadow: 0 0 0 7px rgba(15,61,45,.75), inset 0 0 0 6px rgba(126,217,255,.23);
+      transform: rotate(-5deg);
+    }
+    .map::after {
+      content: ""; position: absolute; right: -8%; top: 14%; width: 43%; height: 43%;
+      background: #ca7651; border: 8px solid #713d38;
+      box-shadow: inset 0 0 0 7px rgba(255,207,115,.35), 0 0 0 7px rgba(38,76,46,.8);
+      clip-path: polygon(9% 0, 91% 0, 100% 12%, 100% 88%, 89% 100%, 11% 100%, 0 88%, 0 12%);
+    }
+    .hills { position: absolute; inset: 0; pointer-events: none; }
+    .hill { position: absolute; width: 38vw; height: 23vw; min-height: 200px; border: 10px solid rgba(40,99,49,.8); background: #438d4e; box-shadow: inset 0 0 0 8px rgba(172,218,105,.4), 0 0 0 5px rgba(19,69,43,.7); clip-path: polygon(0 46%, 10% 40%, 18% 25%, 28% 33%, 38% 12%, 52% 23%, 62% 5%, 77% 27%, 88% 21%, 100% 43%, 100% 100%, 0 100%); }
+    .hill.left { left: -7%; bottom: 7%; transform: rotate(2deg); }
+    .hill.right { right: -6%; bottom: 3%; transform: scaleX(-1) rotate(4deg); background: #378b48; }
+    .path { position: absolute; left: 15%; right: 14%; bottom: 18%; height: 14%; background: #cba866; border: 7px solid #84603d; box-shadow: inset 0 0 0 5px rgba(255,230,157,.48); clip-path: polygon(0 28%, 19% 28%, 27% 0, 69% 0, 78% 36%, 100% 36%, 100% 87%, 74% 87%, 66% 100%, 24% 100%, 18% 70%, 0 70%); opacity: .95; }
+    .tree { position: absolute; z-index: 0; width: 43px; height: 49px; filter: drop-shadow(4px 6px 0 rgba(16,66,40,.65)); }
+    .tree::before { content: ""; position: absolute; inset: 0 3px 10px; background: #247849; border: 4px solid #144c38; clip-path: polygon(50% 0, 100% 42%, 80% 42%, 100% 70%, 70% 70%, 70% 100%, 30% 100%, 30% 70%, 0 70%, 20% 42%, 0 42%); }
+    .tree::after { content: ""; position: absolute; bottom: 0; left: 18px; height: 12px; border-left: 7px solid #78513b; }
+    .t1 { left: 7%; top: 61%; } .t2 { left: 13%; top: 68%; transform: scale(.8); } .t3 { right: 12%; top: 66%; transform: scale(1.25); }
+    .t4 { right: 5%; top: 59%; transform: scale(.85); } .t5 { left: 24%; top: 18%; transform: scale(.9); } .t6 { right: 28%; top: 16%; }
+    .building { position: absolute; z-index: 0; width: 125px; height: 95px; top: 20%; left: 45%; background: #d8c088; border: 6px solid #493735; box-shadow: 7px 8px 0 #6e483e; }
+    .building::before { content: ""; position: absolute; left: -13px; right: -13px; top: -34px; height: 37px; background: #b4493f; border: 6px solid #493735; clip-path: polygon(8% 0, 92% 0, 100% 100%, 0 100%); }
+    .building::after { content: ""; position: absolute; width: 26px; height: 41px; bottom: 0; left: 42px; background: #7b5140; border: 4px solid #493735; }
+    .stone { position: absolute; width: 16px; height: 16px; background: #b6bbc0; border: 3px solid #6a7074; box-shadow: 2px 2px 0 rgba(0,0,0,.3); transform: rotate(45deg); }
+    .s1 { left: 30%; top: 27%; } .s2 { left: 35%; top: 30%; } .s3 { right: 33%; top: 37%; } .s4 { right: 25%; top: 30%; }
+    .cloud { position: absolute; top: 9%; left: -20%; width: 90px; height: 28px; background: rgba(244,250,222,.55); border: 4px solid rgba(50,92,63,.56); animation: cloud 34s linear infinite; }
+    .cloud::before, .cloud::after { content: ""; position: absolute; background: inherit; border: inherit; border-bottom: 0; width: 30px; height: 20px; top: -18px; left: 12px; }
+    .cloud::after { left: 45px; top: -10px; width: 20px; height: 12px; }
+    .cloud.two { top: 48%; animation-duration: 49s; animation-delay: -17s; transform: scale(.7); opacity: .5; }
+    .topbar { width: min(1200px, calc(100% - 38px)); margin: 17px auto 0; display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 2; }
+    .brand, .chapter { background: rgba(24,33,43,.92); border: 3px solid #080d12; box-shadow: 4px 5px 0 rgba(0,0,0,.35), inset 0 0 0 2px #607184; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; padding: 8px 15px; text-decoration: none; font-weight: 900; letter-spacing: .09em; font-size: 14px; }
+    .brand-mark { display: grid; place-items: center; width: 27px; height: 27px; background: #f4cb61; color: #26313d; border: 3px solid #fff0a8; box-shadow: 0 0 0 2px #8b6036; font-family: Georgia,serif; font-size: 17px; }
+    .chapter { padding: 9px 14px; color: #d4e0e4; font: 700 11px Georgia,serif; letter-spacing: .12em; }
+    main { width: min(1160px, calc(100% - 36px)); margin: auto; padding: 28px 0 34px; position: relative; z-index: 1; }
+    .intro { text-align: center; margin: 0 auto 20px; text-shadow: 3px 4px 0 #263542, 0 3px 14px #142833; }
+    .eyebrow { display: inline-block; margin: 0 0 7px; padding: 6px 12px; background: #25313c; border: 2px solid #111820; box-shadow: 3px 4px 0 #526a58; color: #b9edb0; font: 800 11px Georgia,serif; letter-spacing: .16em; }
+    h1 { margin: 0; font-size: clamp(31px, 5.3vw, 58px); line-height: 1.2; letter-spacing: .08em; color: #fff6d4; -webkit-text-stroke: 1px #29323b; text-shadow: 3px 4px 0 #27343d, 0 0 18px rgba(255,232,167,.56); }
+    .intro p { margin: 9px 0 0; font-size: 13px; font-weight: 700; letter-spacing: .06em; }
+    .scene { min-height: 245px; position: relative; display: flex; justify-content: center; align-items: center; gap: clamp(14px, 5vw, 70px); padding: 20px 12px 43px; }
+    .scene::before { content: ""; position: absolute; z-index: -1; left: 7%; right: 7%; bottom: 28px; height: 70px; background: #cba866; border: 7px solid #84603d; box-shadow: inset 0 0 0 5px rgba(255,230,157,.48), 0 9px 0 rgba(29,68,40,.6); clip-path: polygon(5% 20%, 28% 20%, 34% 0, 66% 0, 73% 20%, 95% 20%, 100% 82%, 72% 82%, 65% 100%, 34% 100%, 27% 82%, 0 82%); }
+    .hero-sprite { position: absolute; z-index: 2; left: 50%; bottom: 53px; width: 24px; height: 37px; transform: translateX(-50%); image-rendering: pixelated; filter: drop-shadow(3px 4px 0 rgba(31,58,39,.65)); animation: wander 5s ease-in-out infinite; }
+    .hero-sprite::before { content: ""; position: absolute; left: 3px; top: 0; width: 18px; height: 15px; background: #f4ca8c; border: 3px solid #4b3831; box-shadow: inset 5px 0 #fff0c9; }
+    .hero-sprite::after { content: ""; position: absolute; left: 2px; top: 15px; width: 20px; height: 17px; background: #3277a1; border: 3px solid #25333b; box-shadow: -3px 5px 0 -1px #78513b, 8px 18px 0 -4px #293644, -4px 18px 0 -4px #293644; }
+    .portal { position: relative; width: min(40%, 390px); min-height: 156px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px; padding: 15px; text-align: center; text-decoration: none; color: #fff8dc; background: linear-gradient(145deg, #273542, #18222c); border: 4px solid #111820; outline: 2px solid rgba(255,230,158,.78); box-shadow: 6px 8px 0 rgba(17,30,38,.7), inset 0 0 0 3px #62717a, inset 0 0 26px rgba(102,173,163,.16); transition: transform .25s ease, filter .25s ease, box-shadow .25s ease; }
+    .portal:hover, .portal:focus-visible { transform: translateY(-8px) scale(1.035); filter: brightness(1.17); box-shadow: 8px 12px 0 rgba(17,30,38,.74), inset 0 0 0 3px #fff1ba, 0 0 25px rgba(255,218,122,.58); outline-color: #fff5c8; }
+    .portal:focus-visible { outline-style: dashed; }
+    .portal:nth-child(2) { background: linear-gradient(145deg,#3e4743,#222d2c); }
+    .portal-icon { display: grid; place-items: center; width: 49px; height: 42px; color: #232d36; background: #eac76c; border: 4px solid #fff0a8; box-shadow: 0 0 0 3px #795b36, 0 5px 0 #13212a; font-size: 24px; line-height: 1; }
+    .portal:nth-child(2) .portal-icon { background: #9de0bd; border-color: #d4ffe2; }
+    .portal small { color: #b9edb0; font: 800 10px Georgia,serif; letter-spacing: .17em; }
+    .portal:nth-child(2) small { color: #ffd58b; }
+    .portal strong { display: block; font-size: clamp(16px, 2.2vw, 23px); font-weight: 900; letter-spacing: .04em; text-shadow: 2px 2px #26323a; }
+    .portal em { color: #d5e2dc; font-style: normal; font-size: 11px; }
+    .message { width: min(840px, 94%); margin: 8px auto 0; position: relative; padding: 15px 20px; background: rgba(25,33,44,.96); border: 4px solid #0a1117; box-shadow: inset 0 0 0 2px #637181, 5px 7px 0 rgba(0,0,0,.48); text-align: center; }
+    .message::before { content: "QUEST SELECT"; position: absolute; top: -14px; left: 16px; padding: 3px 9px; background: #24313b; border: 2px solid #0b1218; color: #ffd879; font: 800 10px Georgia,serif; letter-spacing: .13em; }
+    .message p { margin: 0; font-size: 13px; font-weight: 700; letter-spacing: .04em; line-height: 1.8; }
+    .message b { color: var(--gold); }
+    .hint { margin: 10px 0 0; color: #f5f1d3; text-align: center; text-shadow: 2px 2px #263a30; font-size: 11px; font-weight: 800; letter-spacing: .1em; animation: blink 1.8s step-end infinite; }
+    footer { display: flex; justify-content: space-between; width: min(1200px, calc(100% - 38px)); margin: 0 auto 13px; padding: 10px 13px; position: relative; z-index: 1; color: #e4e7d4; background: rgba(25,33,43,.87); border: 2px solid rgba(16,24,31,.8); box-shadow: 3px 4px 0 rgba(0,0,0,.3); font: 700 10px Georgia,serif; letter-spacing: .14em; }
+    @keyframes wander { 0%,100% { margin-left: -4px; } 50% { margin-left: 7px; } }
+    @keyframes cloud { to { left: 115%; } }
+    @keyframes blink { 50% { opacity: .55; } }
+    @media (max-width: 650px) {
+      .topbar { width: calc(100% - 22px); margin-top: 10px; }
+      .brand { padding: 6px 9px; font-size: 11px; }
+      .chapter { padding: 7px 8px; font-size: 9px; }
+      main { width: calc(100% - 22px); padding: 28px 0 18px; }
+      .scene { min-height: 330px; flex-direction: column; gap: 13px; padding: 12px 8px 52px; }
+      .portal { width: min(88%, 390px); min-height: 121px; flex-direction: row; justify-content: flex-start; text-align: left; padding: 12px; gap: 11px; }
+      .portal-icon { flex: 0 0 43px; width: 43px; height: 39px; }
+      .portal-copy { display: flex; flex-direction: column; gap: 4px; }
+      .portal strong { font-size: 17px; }
+      .portal em { font-size: 10px; }
+      .scene::before { left: 0; right: 0; bottom: 17px; height: 55px; }
+      .hero-sprite { bottom: 35px; }
+      .building { left: 41%; transform: scale(.72); transform-origin: top left; }
+      .hill { min-height: 150px; }
+      .message { padding: 13px 12px; }
+      .message p { font-size: 11px; }
+      .hint { font-size: 10px; }
+      footer { width: calc(100% - 22px); font-size: 8px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
 </head>
 <body>
-    <logotohome>
-    <a href="./index.html"><img src="./images/0_XBlogo.png" alt=""></a>
-    </logotohome>
-    <h1>XBP</h1>
-        <h2>ゆーひのXBPポートフォリオ一覧</h2>
-        <!-- このようにするとコードとして認識されない。（メモができる）-->
-        <!--番号付きのリスト-->
-        <ol>
-            <li><a href="./de12/index.html">デザイン演習Ⅰ・Ⅱ</a></li>
-            <li><a href="./digi_fab/index.html">デジタルファブリケーション</a></li>
-        </ol>
-
-            
-        <br>
-        <br>
-
-
+  <div class="game">
+    <div class="map" aria-hidden="true"></div>
+    <div class="hills" aria-hidden="true">
+      <div class="hill left"></div><div class="hill right"></div>
+      <div class="path"></div>
+      <div class="tree t1"></div><div class="tree t2"></div><div class="tree t3"></div><div class="tree t4"></div><div class="tree t5"></div><div class="tree t6"></div>
+      <div class="building"></div>
+      <div class="stone s1"></div><div class="stone s2"></div><div class="stone s3"></div><div class="stone s4"></div>
+      <div class="cloud"></div><div class="cloud two"></div>
+    </div>
+    <header class="topbar">
+      <a class="brand" href="./index.html"><span class="brand-mark">X</span><span>XBP QUEST</span></a>
+      <span class="chapter">FIELD GUIDE　 /　 01</span>
+    </header>
+    <main>
+      <section class="intro">
+        <p class="eyebrow">WELCOME, ADVENTURER!</p>
+        <h1>どの世界を冒険する？</h1>
+        <p>気になるフィールドを選んで、作品の世界へ進もう。</p>
+      </section>
+      <nav class="scene" aria-label="冒険するページを選択">
+        <div class="hero-sprite" aria-hidden="true"></div>
+        <a class="portal" href="./de12/index.html">
+          <span class="portal-icon" aria-hidden="true">✎</span>
+          <span class="portal-copy"><small>WORLD 01　/　DESIGN</small><strong>デザイン演習 I・II</strong><em>アイデアとデザインの冒険へ</em></span>
+        </a>
+        <a class="portal" href="./digi_fab/index.html">
+          <span class="portal-icon" aria-hidden="true">⚒</span>
+          <span class="portal-copy"><small>WORLD 02　/　MAKING</small><strong>デジタルファブリケーション</strong><em>ものづくりの冒険へ</em></span>
+        </a>
+      </nav>
+      <section class="message" aria-label="ゲーム案内"><p>ここから先には、まだ見ぬ作品と制作の記録が待っている。<br><b>行き先を選択してください。</b></p></section>
+      <p class="hint">▼　クリックして冒険をはじめる　▼</p>
+    </main>
+    <footer><span>XBP　/　STUDENT PORTFOLIO</span><span>PRESS START　▶</span></footer>
+  </div>
 </body>
 </html>
